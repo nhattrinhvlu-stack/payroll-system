@@ -70,8 +70,12 @@ export default function DirectorDashboard({ departments, employees, settings, pe
                     <button 
                       onClick={async () => {
                         const res = await approvePayroll(p.id);
-                        if(res.success) toast.success(res.success);
-                        else toast.error(res.error);
+if (res.success) {
+  toast.success(res.success);
+} else {
+  // Thêm "|| 'Lỗi'" để TypeScript không bắt lỗi undefined
+  toast.error(res.error || "Có lỗi xảy ra khi duyệt"); 
+}
                       }}
                       className="w-full bg-green-600 text-white py-2 rounded text-sm font-bold hover:bg-green-700"
                     >
