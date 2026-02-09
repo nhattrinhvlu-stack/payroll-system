@@ -1,26 +1,50 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { hash } from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
 export async function createEmployee(formData: FormData) {
-  // 1. Lấy dữ liệu từ Form gửi lên
   const fullName = formData.get("fullName") as string;
+  const username = formData.get("username") as string;
   const position = formData.get("position") as string;
-  const department = formData.get("department") as string;
+  const departmentId = formData.get("department") as string; // Đây là ID phòng ban
   const rawSalary = formData.get("baseSalary") as string;
 
-  // 2. Lưu vào Database
-  await db.employee.create({
-    data: {
-      fullName,
-      position,
-      department,
-      baseSalary: parseFloat(rawSalary) || 0, // Chuyển chữ thành số
-      status: "ACTIVE",
-    },
-  });
+  try {
+    // 1. Mã hóa mật khẩu mặc định (123456)
+    const hashedPassword = await hash("123456", 10);
 
-  // 3. F5 lại dữ liệu trang chủ ngay lập tức
-  revalidatePath("/");
+    // 2. Lưu vào Database
+    await db.employee.create({
+      data: {
+        fullName,
+        username,
+        password: hashedPassword,
+        position,
+        // SỬA LỖI TẠI ĐÂY: Dùng departmentId thay vì department
+        departmentId: departmentId, 
+        baseSalary: parseFloat(rawSalary) || 0,
+        role: "EMPLOYEE",
+        status: "ACTIVE",
+      },
+    });
+
+    revalidatePath("/director");
+    return { success: "Thêm nhân viên thành công!" };
+  } catch (error) {
+    console.error(error);
+    return { error: "Không thể tạo nhân viên. Có thể tên đăng nhập đã tồn tại!" };
+  }
+}
+
+// Hàm xóa nhân viên (Nếu bạn có dùng)
+export async function deleteEmployee(id: string) {
+  try {
+    await db.employee.delete({ where: { id } });
+    revalidatePath("/director");
+    return { success: "Xóa thành công" };
+  } catch (error) {
+    return { error: "Lỗi khi xóa nhân viên" };
+  }
 }
