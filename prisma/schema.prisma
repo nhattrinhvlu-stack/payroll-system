@@ -1,14 +1,141 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- 1. CÁC DANH SÁCH CỐ ĐỊNH (ENUM) ---
+
+// Phân quyền người dùng
+enum Role {
+  DIRECTOR   // Giám đốc
+  ACCOUNTANT // Kế toán
+  EMPLOYEE   // Nhân viên
+}
+
+// Trạng thái bảng lương
+enum PayrollStatus {
+  DRAFT     // Nháp (Kế toán đang làm)
+  PENDING   // Chờ duyệt (Đã gửi Giám đốc)
+  APPROVED  // Đã duyệt (Chốt tiền, không sửa được nữa)
+  REJECTED  // Từ chối (Trả về cho Kế toán sửa)
+}
+
+// --- 2. QUẢN LÝ PHÒNG BAN ---
+model Department {
+  id          String     @id @default(cuid())
+  name        String     @unique // Tên phòng ban
+  description String?
+  employees   Employee[]
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+// --- 3. QUẢN LÝ NHÂN SỰ ---
+model Employee {
+  id          String    @id @default(cuid())
+  
+  // Login
+  username    String    @unique
+  password    String
+  role        Role      @default(EMPLOYEE)
+
+  // Info
+  fullName    String
+  email       String?   @unique
+  phone       String?
+  dob         DateTime?
+  
+  // Quan hệ
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+
+  baseSalary  Float
+
+  payrolls    Payroll[]
+  attendances Attendance[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// --- 4. CÀI ĐẶT CỦA GIÁM ĐỐC (SETTINGS) ---
+model GlobalSettings {
+  id                    String   @id @default("default")
+  
+  standardWorkDays      Int      @default(26)
+  overtimeRatio         Float    @default(1.5)
+  fuelPricePerKm        Float    @default(5000)
+  insurancePercent      Float    @default(0) // % Bảo hiểm (Ví dụ 10.5)
+  responsibilityAmount  Float    @default(0)
+  phoneAllowance        Float    @default(0)
+  otherAllowance        Float    @default(0)
+
+  updatedAt             DateTime @updatedAt
+}
+
+// --- 5. CHẤM CÔNG (CẬP NHẬT MỚI) ---
+model Attendance {
+  id          String   @id @default(cuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  
+  date        DateTime
+  workingDays Float    @default(1)
+  overtime    Float    @default(0)
+  kmTraveled  Float    @default(0)
+
+  // --- CỘT TIỀN MỚI THÊM ---
+  dailyAllowance Float    @default(0) // Tiền hỗ trợ thêm (Cơm, nước...)
+  dailyAdvance   Float    @default(0) // Tiền ứng nóng (Trừ vào lương)
+  // -------------------------
+
+  note        String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([employeeId, date])
+}
+
+// --- 6. BẢNG LƯƠNG ---
+model Payroll {
+  id            String   @id @default(cuid())
+  employeeId    String
+  employee      Employee @relation(fields: [employeeId], references: [id])
+  
+  month         Int
+  year          Int
+  
+  // Thông số tại thời điểm tính
+  baseSalary    Float 
+  standardDays  Int      @default(26)
+  actualWorkDays Float   @default(0)
+  
+  overtimeHours Float    @default(0)
+  overtimeSalary Float   @default(0)
+
+  kmTraveled    Float    @default(0)
+  fuelAllowance Float    @default(0)
+
+  responsibility Float   @default(0)
+  phoneAllowance Float   @default(0)
+  otherAllowance Float   @default(0)
+  
+  advancePayment Float   @default(0)
+  insurance      Float   @default(0)
+  
+  totalSalary    Float   // Thực lãnh
+  
+  status          PayrollStatus @default(DRAFT)
+  rejectionReason String?
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([employeeId, month, year])
 }
