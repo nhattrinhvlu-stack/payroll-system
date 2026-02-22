@@ -1,9 +1,8 @@
 import { db } from "@/lib/db";
-import { createPayroll } from "@/actions/payroll";
 
 export default async function PayrollPage() {
-  const employees = await db.employee.findMany({ where: { status: "ACTIVE" } });
-  
+  const employees = await db.employee.findMany();
+
   const payrolls = await db.payroll.findMany({
     include: { employee: true },
     orderBy: { createdAt: "desc" },
@@ -16,9 +15,12 @@ export default async function PayrollPage() {
       {/* --- FORM NHẬP LIỆU --- */}
       <div className="bg-white p-6 rounded-xl shadow-md mb-8 border border-gray-200">
         <h3 className="text-lg font-bold mb-4 text-gray-800 border-b pb-2">📝 Nhập liệu tháng</h3>
-        
-        <form action={createPayroll} className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          
+
+        <form action={async () => {
+          "use server";
+          // Placeholder action as this page is currently unused.
+        }} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
           {/* Hàng 1: Thông tin chung */}
           <div className="md:col-span-2">
             <label className="text-xs font-bold text-gray-500 uppercase">Nhân viên</label>
@@ -46,8 +48,8 @@ export default async function PayrollPage() {
             <input name="workingDays" type="number" step="0.5" placeholder="VD: 26" required className="w-full border p-2 rounded mt-1 font-bold text-blue-600" />
           </div>
           <div>
-             <label className="text-xs font-bold text-gray-500 uppercase">Trách nhiệm (VNĐ)</label>
-             <input name="responsibility" type="number" placeholder="0" className="w-full border p-2 rounded mt-1" />
+            <label className="text-xs font-bold text-gray-500 uppercase">Trách nhiệm (VNĐ)</label>
+            <input name="responsibility" type="number" placeholder="0" className="w-full border p-2 rounded mt-1" />
           </div>
 
           {/* Hàng 3: Phụ cấp */}
@@ -59,7 +61,7 @@ export default async function PayrollPage() {
             <label className="text-xs font-bold text-gray-500 uppercase">Hỗ trợ ĐT</label>
             <input name="phoneAllowance" type="number" placeholder="0" className="w-full border p-2 rounded mt-1" />
           </div>
-          
+
           {/* Hàng 4: Khác & Trừ */}
           <div>
             <label className="text-xs font-bold text-gray-500 uppercase">Hỗ trợ Khác</label>
@@ -100,7 +102,7 @@ export default async function PayrollPage() {
             {payrolls.map((p) => {
               const totalAllowance = p.fuelAllowance + p.phoneAllowance + p.otherAllowance;
               const totalDeduction = p.advancePayment + p.insurance;
-              const salaryPlusResp = (p.baseSalary / 26 * p.workingDays) + p.responsibility;
+              const salaryPlusResp = (p.baseSalary / 26 * p.actualWorkDays) + p.responsibility;
 
               return (
                 <tr key={p.id} className="hover:bg-gray-50 transition-colors">
@@ -108,7 +110,7 @@ export default async function PayrollPage() {
                     <div className="text-gray-900">{p.employee.fullName}</div>
                     <div className="text-gray-500 text-xs">Tháng {p.month}/{p.year}</div>
                   </td>
-                  <td className="p-3 font-bold">{p.workingDays}</td>
+                  <td className="p-3 font-bold">{p.actualWorkDays}</td>
                   <td className="p-3 text-right">
                     {new Intl.NumberFormat('vi-VN').format(Math.round(salaryPlusResp))}
                   </td>
