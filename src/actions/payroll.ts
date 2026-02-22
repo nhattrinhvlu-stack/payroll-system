@@ -12,7 +12,7 @@ export async function calculateMonthlyPayroll(formData: FormData) {
     const settings = await db.globalSettings.findUnique({ where: { id: "default" } });
     if (!settings) return { error: "Chưa cấu hình thiết lập lương chung!" };
 
-    const employees = await db.employee.findMany(); // Theo schema mới [cite: 3]
+    const employees = await db.employee.findMany();
 
     for (const emp of employees) {
       const startDate = new Date(year, month - 1, 1);
@@ -70,7 +70,7 @@ export async function approvePayroll(data: FormData | string) {
   try {
     await db.payroll.update({
       where: { id },
-      data: { status: "APPROVED" } // Giám đốc duyệt chốt luôn [cite: 1]
+      data: { status: "APPROVED" }
     });
     revalidatePath("/director");
     revalidatePath("/accountant");
@@ -81,11 +81,14 @@ export async function approvePayroll(data: FormData | string) {
 }
 
 // 3. Hàm từ chối (Dùng cho Director)
-export async function rejectPayroll(id: string, reason: string) {
+export async function rejectPayroll(formData: FormData) {
+  const id = formData.get("id") as string;
+  const reason = formData.get("reason") as string;
+  if (!reason) return { error: "Vui lòng nhập lý do từ chối!", success: "" };
   try {
     await db.payroll.update({
       where: { id },
-      data: { status: "REJECTED", rejectionReason: reason } [cite: 12]
+      data: { status: "REJECTED", rejectionReason: reason }
     });
     revalidatePath("/director");
     return { success: "Đã từ chối phiếu lương!", error: "" };
