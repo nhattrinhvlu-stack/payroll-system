@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { db } from "@/lib/db";
 import { calculateMonthlyPayroll, approvePayroll } from "@/actions/payroll";
 import { logout } from "@/actions/auth";
