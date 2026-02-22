@@ -25,7 +25,7 @@ export async function GET() {
     const directorRole = "DIRECTOR"; // Khớp với Enum trong Schema
     const hashedPassword = await hash("123456", 10); // Mật khẩu là 123456
 
-    const director = await db.employee.upsert({
+    await db.employee.upsert({
       where: { username: "admin" },
       update: {
         role: directorRole,
@@ -41,7 +41,30 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ message: "✅ Khởi tạo thành công! Tài khoản: admin / 123456" });
+    // 4. Tạo Tài khoản Kế Toán (ketoan/123456)
+    await db.employee.upsert({
+      where: { username: "ketoan" },
+      update: {
+        role: "ACCOUNTANT",
+        password: hashedPassword,
+      },
+      create: {
+        username: "ketoan",
+        password: hashedPassword,
+        fullName: "Nguyễn Thị Kế Toán",
+        role: "ACCOUNTANT",
+        baseSalary: 15000000,
+        department: { connect: { name: "Phòng Kế Toán" } },
+      },
+    });
+
+    return NextResponse.json({
+      message: "✅ Khởi tạo thành công!",
+      accounts: [
+        { username: "admin", password: "123456", role: "Giám Đốc" },
+        { username: "ketoan", password: "123456", role: "Kế Toán" },
+      ]
+    });
   } catch (error) {
     return NextResponse.json({ error: "Lỗi khởi tạo: " + error }, { status: 500 });
   }
