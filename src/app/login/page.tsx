@@ -22,17 +22,17 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 font-sans">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-200">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-blue-900">Payroll System</h1>
+          <h1 className="text-3xl font-bold text-blue-900">DuyPhat System</h1>
           <p className="text-gray-500 mt-2">Đăng nhập hệ thống</p>
         </div>
 
         <form action={formAction} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Tài khoản</label>
-            <input 
-              name="username" 
-              type="text" 
-              required 
+            <input
+              name="username"
+              type="text"
+              required
               placeholder="admin"
               className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition"
             />
@@ -40,10 +40,10 @@ export default function LoginPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
-            <input 
-              name="password" 
-              type="password" 
-              required 
+            <input
+              name="password"
+              type="password"
+              required
               placeholder="••••••"
               className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition"
             />
@@ -55,15 +55,15 @@ export default function LoginPage() {
             </div>
           )}
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={isPending}
             className="w-full bg-blue-800 hover:bg-blue-900 text-white font-bold py-3 rounded-lg transition-all shadow-md active:scale-95 disabled:opacity-70"
           >
             {isPending ? "Đang xử lý..." : "ĐĂNG NHẬP"}
           </button>
         </form>
-        
+
         <p className="text-center text-xs text-gray-400 mt-6">
           Hệ thống quản lý nội bộ - Vui lòng không chia sẻ tài khoản.
         </p>

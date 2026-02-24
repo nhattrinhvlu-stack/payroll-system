@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Payroll System",
+  title: "DuyPhat System",
   description: "Hệ thống quản lý lương",
 };
 
@@ -26,7 +26,7 @@ export default function RootLayout({
       >
         {/* 3. Đặt Toaster ở đây để hiện thông báo */}
         <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
-        
+
         {children}
       </body>
     </html>
