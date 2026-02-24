@@ -26,11 +26,12 @@ async function logAudit(actorName: string, action: string, target: string, detai
 export async function createLeaveRequest(prevState: any, formData: FormData) {
   const actor = await getActor();
   const type = formData.get("type") as string;
+  const session = formData.get("session") as string;
   const startDateStr = formData.get("startDate") as string;
   const endDateStr = formData.get("endDate") as string;
   const reason = formData.get("reason") as string;
 
-  if (!type || !startDateStr || !endDateStr || !reason) {
+  if (!type || !startDateStr || !endDateStr || !reason || !session) {
     return { error: "Vui lòng điền đầy đủ thông tin đơn nghỉ!" };
   }
 
@@ -41,22 +42,33 @@ export async function createLeaveRequest(prevState: any, formData: FormData) {
     return { error: "Ngày kết thúc phải sau ngày bắt đầu!" };
   }
 
-  // Tính số ngày nghỉ (bao gồm cả ngày đầu và cuối)
-  const diffTime = endDate.getTime() - startDate.getTime();
-  const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  let totalDays = 0;
+
+  if (session === "MORNING" || session === "AFTERNOON") {
+    if (startDateStr !== endDateStr) {
+      return { error: "Nghỉ nửa ngày chỉ được chọn trong cùng một ngày!" };
+    }
+    totalDays = 0.5;
+  } else {
+    // Tính số ngày nghỉ (bao gồm cả ngày đầu và cuối)
+    const diffTime = endDate.getTime() - startDate.getTime();
+    totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  }
 
   try {
     await db.leaveRequest.create({
       data: {
         employeeId: actor.id,
         type: type as any,
+        session: session as any,
         startDate,
         endDate,
         totalDays,
         reason,
-      },
+      } as any,
     });
-    await logAudit(actor.name, "Xin nghỉ phép", actor.name, `Loại: ${type}, ${totalDays} ngày`);
+    const sessionText = session === "MORNING" ? "Sáng" : (session === "AFTERNOON" ? "Chiều" : "Cả ngày");
+    await logAudit(actor.name, "Xin nghỉ phép", actor.name, `Loại: ${type}, ${totalDays} ngày (${sessionText})`);
     revalidatePath("/employee");
     return { success: "Đã gửi đơn xin nghỉ thành công!" };
   } catch (e) {

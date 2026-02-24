@@ -19,14 +19,24 @@ export default function LeaveRequestForm() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
             <h3 className="font-bold text-gray-700 mb-4 text-center">📅 Xin Nghỉ Phép</h3>
             <form id="leaveForm" action={action} className="space-y-4">
-                <div>
-                    <label className="text-sm font-bold text-gray-600 block mb-1">Loại Nghỉ</label>
-                    <select name="type" required className="w-full border p-2 rounded text-sm outline-none focus:ring-2 focus:ring-green-500 bg-white">
-                        <option value="ANNUAL">Nghỉ phép năm (Có lương)</option>
-                        <option value="SICK">Nghỉ ốm (Có BHXH hỗ trợ)</option>
-                        <option value="UNPAID">Nghỉ không lương</option>
-                        <option value="OTHER">Khác</option>
-                    </select>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="text-sm font-bold text-gray-600 block mb-1">Loại Nghỉ</label>
+                        <select name="type" required className="w-full border p-2 rounded text-sm outline-none focus:ring-2 focus:ring-green-500 bg-white">
+                            <option value="ANNUAL">Nghỉ phép năm (Có lương)</option>
+                            <option value="SICK">Nghỉ ốm (Có BHXH hỗ trợ)</option>
+                            <option value="UNPAID">Nghỉ không lương</option>
+                            <option value="OTHER">Khác</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="text-sm font-bold text-gray-600 block mb-1">Thời gian</label>
+                        <select name="session" required className="w-full border p-2 rounded text-sm outline-none focus:ring-2 focus:ring-green-500 bg-white">
+                            <option value="ALL_DAY">Cả ngày</option>
+                            <option value="MORNING">Nửa ngày - Buổi Sáng</option>
+                            <option value="AFTERNOON">Nửa ngày - Buổi Chiều</option>
+                        </select>
+                    </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div>

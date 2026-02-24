@@ -35,6 +35,12 @@ enum LeaveStatus {
   REJECTED
 }
 
+enum LeaveSession {
+  ALL_DAY     // Cả ngày
+  MORNING     // Buổi sáng
+  AFTERNOON   // Buổi chiều
+}
+
 enum ContractType {
   FULL_TIME   // Toàn thời gian
   PART_TIME   // Bán thời gian
@@ -68,11 +74,17 @@ model Employee {
   phone       String?
   dob         DateTime?
 
+  // Lương & Phụ cấp Cá nhân (MỚI)
+  baseSalary           Float
+  responsibilityAmount Float   @default(0)
+  phoneAllowance       Float   @default(0)
+  otherAllowance       Float   @default(0)
+  hasInsurance         Boolean @default(false)
+
   // Quan hệ
   departmentId String?
   department   Department? @relation(fields: [departmentId], references: [id])
 
-  baseSalary  Float
   isActive    Boolean   @default(true)
 
   payrolls      Payroll[]
@@ -91,10 +103,7 @@ model GlobalSettings {
   standardWorkDays      Int      @default(26)
   overtimeRatio         Float    @default(1.5)
   fuelPricePerKm        Float    @default(5000)
-  insurancePercent      Float    @default(0)
-  responsibilityAmount  Float    @default(0)
-  phoneAllowance        Float    @default(0)
-  otherAllowance        Float    @default(0)
+  insurancePercent      Float    @default(0) // Giữ lại % để tính nếu hasInsurance = true
 
   updatedAt             DateTime @updatedAt
 }
@@ -165,6 +174,7 @@ model LeaveRequest {
   employee     Employee    @relation(fields: [employeeId], references: [id])
 
   type         LeaveType
+  session      LeaveSession @default(ALL_DAY) // MỚI THÊM: Sáng/Chiều/Cả ngày
   startDate    DateTime
   endDate      DateTime
   totalDays    Float

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useTransition } from "react";
 import toast from "react-hot-toast";
 import { updateLeaveStatus } from "@/actions/leave";
 
@@ -9,12 +9,7 @@ interface Props {
 }
 
 export default function LeaveRequestCard({ leaveRequests }: Props) {
-    const [state, action, isPending] = useActionState(updateLeaveStatus, null);
-
-    useEffect(() => {
-        if (state?.success) toast.success(state.success);
-        if (state?.error) toast.error(state.error);
-    }, [state]);
+    const [isPending, startTransition] = useTransition();
 
     const pendingLeaves = leaveRequests.filter(l => l.status === "PENDING");
     const historyLeaves = leaveRequests.filter(l => l.status !== "PENDING").slice(0, 10);
@@ -47,13 +42,35 @@ export default function LeaveRequestCard({ leaveRequests }: Props) {
                                 <p className="text-xs text-gray-500 mt-1 italic">"{leave.reason}"</p>
                             </div>
 
-                            <form action={action} className="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
+                            <form className="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
                                 <input type="hidden" name="id" value={leave.id} />
                                 <input type="text" name="approverNote" placeholder="Ghi chú (tùy chọn)..." className="border p-2 rounded text-xs outline-none focus:ring-2 focus:ring-blue-500 flex-1" />
-                                <button type="submit" name="status" value="APPROVED" disabled={isPending} className="bg-green-600 text-white px-3 py-2 rounded text-xs font-bold hover:bg-green-700 disabled:opacity-50">
+                                <button
+                                    formAction={(formData) => {
+                                        formData.append("status", "APPROVED");
+                                        startTransition(async () => {
+                                            const res = await updateLeaveStatus(null, formData);
+                                            if (res?.success) toast.success(res.success);
+                                            if (res?.error) toast.error(res.error);
+                                        });
+                                    }}
+                                    disabled={isPending}
+                                    className="bg-green-600 text-white px-3 py-2 rounded text-xs font-bold hover:bg-green-700 disabled:opacity-50"
+                                >
                                     ✅ Duyệt
                                 </button>
-                                <button type="submit" name="status" value="REJECTED" disabled={isPending} className="bg-red-100 text-red-700 px-3 py-2 rounded text-xs font-bold hover:bg-red-200 border border-red-200 disabled:opacity-50">
+                                <button
+                                    formAction={(formData) => {
+                                        formData.append("status", "REJECTED");
+                                        startTransition(async () => {
+                                            const res = await updateLeaveStatus(null, formData);
+                                            if (res?.success) toast.success(res.success);
+                                            if (res?.error) toast.error(res.error);
+                                        });
+                                    }}
+                                    disabled={isPending}
+                                    className="bg-red-100 text-red-700 px-3 py-2 rounded text-xs font-bold hover:bg-red-200 border border-red-200 disabled:opacity-50"
+                                >
                                     ❌ Từ chối
                                 </button>
                             </form>

@@ -44,23 +44,23 @@ export async function calculateMonthlyPayroll(formData: FormData) {
       const salaryByWorkDays = dailySalary * totalWorkDays;
       const salaryOvertime = hourlySalary * totalOvertime * settings.overtimeRatio;
       const salaryFuel = totalKm * settings.fuelPricePerKm;
-      
-      // TÍNH BẢO HIỂM (MỚI)
-      // Công thức: Lương Cơ Bản * (% Bảo hiểm / 100)
-      const insuranceAmount = emp.baseSalary * (settings.insurancePercent / 100);
 
-      const responsibility = settings.responsibilityAmount;
-      const phone = settings.phoneAllowance;
-      const other = settings.otherAllowance;
+      // TÍNH BẢO HIỂM (MỚI)
+      // Công thức: Lương Cơ Bản * (% Bảo hiểm / 100) nhưng CHỈ TÍNH NẾU nhân viên có đóng BHXH
+      const insuranceAmount = emp.hasInsurance ? emp.baseSalary * (settings.insurancePercent / 100) : 0;
+
+      const responsibility = emp.responsibilityAmount || 0;
+      const phone = emp.phoneAllowance || 0;
+      const other = emp.otherAllowance || 0;
 
       // CÔNG THỨC TỔNG (Đã trừ bảo hiểm)
-      const totalSalary = 
-          salaryByWorkDays + 
-          salaryOvertime + 
-          salaryFuel + 
-          (totalDailyAllowance + responsibility + phone + other) - 
-          totalDailyAdvance - 
-          insuranceAmount; // <--- Trừ bảo hiểm ở đây
+      const totalSalary =
+        salaryByWorkDays +
+        salaryOvertime +
+        salaryFuel +
+        (totalDailyAllowance + responsibility + phone + other) -
+        totalDailyAdvance -
+        insuranceAmount; // <--- Trừ bảo hiểm ở đây
 
       const existingPayroll = await db.payroll.findUnique({
         where: { employeeId_month_year: { employeeId: emp.id, month, year } }
@@ -82,9 +82,9 @@ export async function calculateMonthlyPayroll(formData: FormData) {
           phoneAllowance: phone,
           otherAllowance: other + totalDailyAllowance,
           advancePayment: totalDailyAdvance,
-          
+
           insurance: insuranceAmount, // Lưu số tiền bảo hiểm
-          
+
           totalSalary: Math.round(totalSalary),
         },
         create: {
@@ -102,9 +102,9 @@ export async function calculateMonthlyPayroll(formData: FormData) {
           phoneAllowance: phone,
           otherAllowance: other + totalDailyAllowance,
           advancePayment: totalDailyAdvance,
-          
+
           insurance: insuranceAmount, // Lưu số tiền bảo hiểm
-          
+
           totalSalary: Math.round(totalSalary),
           status: "DRAFT"
         }

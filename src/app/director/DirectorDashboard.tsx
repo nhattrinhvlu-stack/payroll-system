@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { createDepartment, createEmployee, updateSettings } from "@/actions/director";
+import { createDepartment, createEmployee, updateSettings, deleteDepartment } from "@/actions/director";
 import { approvePayroll, rejectPayroll } from "@/actions/payroll";
 import { logout } from "@/actions/auth";
 import EmployeeListCard from "./EmployeeListCard";
@@ -133,15 +133,31 @@ export default function DirectorDashboard({
             {/* Cột trái: Thêm nhân viên / Phòng ban (Thu gọn phần thêm NV nếu dài) */}
             <div className="lg:col-span-1 border border-gray-200 bg-white p-6 rounded-xl shadow-sm h-fit">
               <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">👤 Thêm Nhân Viên Mới</h3>
-              {/* Form thêm nhân viên giữ nguyên */}
+              {/* Form thêm nhân viên */}
               <form action={actionEmp} className="space-y-4">
                 <div>
                   <input name="fullName" required placeholder="Họ và Tên (*)" className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <input name="username" required placeholder="User (*)" className="w-full border p-2 rounded bg-yellow-50 focus:ring-2 focus:ring-yellow-400 outline-none text-sm" />
-                  <input name="baseSalary" type="number" required placeholder="Lương (*)" className="w-full border p-2 rounded text-green-700 outline-none text-sm" />
+                  <input name="baseSalary" type="number" required placeholder="Lương Cbản (*)" className="w-full border p-2 rounded text-green-700 outline-none text-sm font-bold" />
                 </div>
+
+                {/* Phụ cấp cá nhân */}
+                <div className="bg-gray-50 p-3 rounded border border-gray-100 space-y-2">
+                  <p className="text-xs font-bold text-gray-500 uppercase">Phụ cấp & Cấu hình</p>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <input name="responsibilityAmount" type="number" placeholder="PC Trách nhiệm" className="w-full border p-2 rounded" />
+                    <input name="phoneAllowance" type="number" placeholder="PC Điện thoại" className="w-full border p-2 rounded" />
+                  </div>
+                  <input name="otherAllowance" type="number" placeholder="PC Khác (cố định hàng tháng)" className="w-full border p-2 rounded text-sm" />
+
+                  <label className="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer pt-1">
+                    <input type="checkbox" name="hasInsurance" value="true" className="w-4 h-4 text-blue-600 rounded" />
+                    Đóng Bảo Hiểm Xã Hội (BHXH)
+                  </label>
+                </div>
+
                 <select name="departmentId" className="w-full border p-2 rounded bg-white text-sm">
                   <option value="">-- Chọn phòng / Trống --</option>
                   {departments.map((d: any) => (
@@ -163,9 +179,32 @@ export default function DirectorDashboard({
                   <input name="name" placeholder="Tên phòng..." className="flex-1 border p-2 rounded text-sm" required />
                   <button disabled={isPendingDept} className="bg-blue-600 text-white px-3 py-2 rounded text-sm font-bold disabled:opacity-50">+</button>
                 </form>
-                <div className="mt-3 flex flex-wrap gap-1">
+                <div className="mt-3 flex flex-wrap gap-2 text-sm">
                   {departments.map((d: any) => (
-                    <span key={d.id} className="text-[10px] bg-blue-50 text-blue-800 px-2 py-1 rounded border border-blue-100">{d.name}</span>
+                    <form
+                      key={d.id}
+                      action={async (fd) => {
+                        const res = await deleteDepartment(null, fd);
+                        if (res?.error) toast.error(res.error);
+                        if (res?.success) toast.success(res.success);
+                      }}
+                      onSubmit={(e) => {
+                        if (!confirm(`Bạn có chắc muốn xóa phòng ${d.name}?`)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      className="inline-flex items-center bg-blue-50 text-blue-800 rounded border border-blue-200 overflow-hidden group"
+                    >
+                      <span className="px-2 py-1 select-none">{d.name}</span>
+                      <input type="hidden" name="id" value={d.id} />
+                      <button
+                        type="submit"
+                        className="bg-blue-100 hover:bg-red-500 hover:text-white px-2 py-1 transition-colors border-l border-blue-200 text-gray-500"
+                        title="Xóa phòng ban"
+                      >
+                        ×
+                      </button>
+                    </form>
                   ))}
                 </div>
               </div>
@@ -190,7 +229,7 @@ export default function DirectorDashboard({
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pendingPayrolls.map((p) => (
-                    <div key={p.id} className="bg-white p-4 rounded-lg shadow-sm border border-orange-100">
+                    <div key={p.id} className="bg-white p-4 rounded-lg shadow-sm border border-orange-100 flex flex-col">
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <p className="font-bold text-gray-800">{p.employee.fullName}</p>
@@ -198,11 +237,111 @@ export default function DirectorDashboard({
                         </div>
                         <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded font-bold">Chờ duyệt</span>
                       </div>
-                      <div className="text-2xl font-bold text-blue-900 mb-4">
+
+                      <div className="text-2xl font-black text-blue-900 mb-3 border-b pb-3 border-gray-50">
                         {new Intl.NumberFormat('vi-VN').format(p.totalSalary)} đ
                       </div>
 
-                      <div className="flex flex-col gap-2">
+                      {/* --- CHI TIẾT CHẤM CÔNG --- */}
+                      <details className="mb-4 group">
+                        <summary className="text-xs font-bold text-indigo-600 cursor-pointer hover:underline list-none flex items-center gap-1">
+                          <span className="group-open:rotate-90 transition-transform">▶</span> Xem chi tiết chấm công & phụ cấp
+                        </summary>
+                        <div className="mt-3 bg-gray-50 p-3 rounded-lg border border-gray-100 text-[11px] space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-gray-500 font-bold">Lương cơ bản:</span>
+                            <span className="font-black text-gray-700">{new Intl.NumberFormat('vi-VN').format(p.baseSalary)}đ</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500 font-bold">Ngày công thực/chuẩn:</span>
+                            <span className="font-black text-blue-600">{p.actualWorkDays} / {p.standardDays}</span>
+                          </div>
+                          {p.overtimeHours > 0 && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-500 font-bold">Tăng ca:</span>
+                              <span className="font-black text-orange-600">{p.overtimeHours}h (+{new Intl.NumberFormat('vi-VN').format(p.overtimeSalary)}đ)</span>
+                            </div>
+                          )}
+                          {p.kmTraveled > 0 && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-500 font-bold">Di chuyển (xăng):</span>
+                              <span className="font-black text-gray-700">{p.kmTraveled} km (+{new Intl.NumberFormat('vi-VN').format(p.fuelAllowance)}đ)</span>
+                            </div>
+                          )}
+                          {(p.responsibility > 0 || p.phoneAllowance > 0) && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-500 font-bold">Phụ cấp cố định:</span>
+                              <span className="font-black text-gray-700">+{new Intl.NumberFormat('vi-VN').format(p.responsibility + p.phoneAllowance)}đ</span>
+                            </div>
+                          )}
+                          {p.otherAllowance > 0 && (
+                            <div className="flex justify-between">
+                              <span className="text-green-600 font-bold">Tiền Hỗ trợ (+):</span>
+                              <span className="font-black text-green-700">+{new Intl.NumberFormat('vi-VN').format(p.otherAllowance)}đ</span>
+                            </div>
+                          )}
+                          {p.advancePayment > 0 && (
+                            <div className="flex justify-between">
+                              <span className="text-red-500 font-bold">Đã Ứng trước (-):</span>
+                              <span className="font-black text-red-600">-{new Intl.NumberFormat('vi-VN').format(p.advancePayment)}đ</span>
+                            </div>
+                          )}
+                          {p.insurance > 0 && (
+                            <div className="flex justify-between border-t border-red-100 pt-1 mt-1">
+                              <span className="text-red-500 font-bold">Trừ BHXH (-):</span>
+                              <span className="font-black text-red-600">-{new Intl.NumberFormat('vi-VN').format(p.insurance)}đ</span>
+                            </div>
+                          )}
+                        </div>
+                      </details>
+
+                      {/* --- CHI TIẾT CHẤM CÔNG HÀNG NGÀY --- */}
+                      {p.attendances && p.attendances.length > 0 && (
+                        <details className="mb-4 group">
+                          <summary className="text-xs font-bold text-gray-600 cursor-pointer hover:underline list-none flex items-center gap-1">
+                            <span className="group-open:rotate-90 transition-transform">▶</span> Xem lịch sử chấm công từng ngày
+                          </summary>
+                          <div className="mt-3 bg-white p-2 text-[10px] rounded border border-gray-200 shadow-inner max-h-48 overflow-y-auto">
+                            <table className="w-full text-left border-collapse">
+                              <thead className="bg-gray-100 text-gray-500 sticky top-0">
+                                <tr>
+                                  <th className="p-1 border-b">Ngày</th>
+                                  <th className="p-1 border-b text-center">Công</th>
+                                  <th className="p-1 border-b text-center">TC(h)</th>
+                                  <th className="p-1 border-b text-right">Km</th>
+                                  <th className="p-1 border-b text-right text-green-600">Hỗ trợ</th>
+                                  <th className="p-1 border-b text-right text-red-500">Ứng</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {p.attendances.map((att: any) => (
+                                  <tr key={att.id} className="border-b border-gray-50 hover:bg-gray-50">
+                                    <td className="p-1 font-bold">{new Date(att.date).toLocaleDateString('vi-VN')}</td>
+                                    <td className="p-1 text-center font-bold text-blue-600">{att.workingDays}</td>
+                                    <td className="p-1 text-center font-bold text-orange-600">{att.overtime > 0 ? att.overtime : "-"}</td>
+                                    <td className="p-1 text-right text-gray-600">{att.kmTraveled > 0 ? att.kmTraveled : "-"}</td>
+                                    <td className="p-1 text-right font-bold text-green-600">{att.dailyAllowance > 0 ? new Intl.NumberFormat('vi-VN').format(att.dailyAllowance) : "-"}</td>
+                                    <td className="p-1 text-right font-bold text-red-500">{att.dailyAdvance > 0 ? new Intl.NumberFormat('vi-VN').format(att.dailyAdvance) : "-"}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                            {p.attendances.some((att: any) => att.note) && (
+                              <div className="mt-2 border-t pt-2 space-y-1">
+                                <p className="font-bold text-gray-500 mb-1">📋 Ghi chú trong tháng:</p>
+                                {p.attendances.filter((att: any) => att.note).map((att: any) => (
+                                  <div key={`note-${att.id}`} className="flex gap-2 text-gray-600">
+                                    <span className="font-bold shrink-0">{new Date(att.date).toLocaleDateString('vi-VN')}:</span>
+                                    <span>{att.note}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </details>
+                      )}
+
+                      <div className="flex flex-col gap-2 mt-auto">
                         <button
                           onClick={async () => {
                             const res = await approvePayroll(p.id);
@@ -266,22 +405,10 @@ export default function DirectorDashboard({
                   <input name="fuelPricePerKm" type="number" defaultValue={settings?.fuelPricePerKm ?? 5000} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
 
-                <div className="pt-2 border-t mt-2">
-                  <p className="text-xs text-gray-400 mb-2">Phụ cấp mặc định:</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-xs font-bold text-gray-500">Trách nhiệm</label>
-                      <input name="responsibilityAmount" type="number" defaultValue={settings?.responsibilityAmount ?? 0} className="w-full border p-2 rounded text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-gray-500">Điện thoại</label>
-                      <input name="phoneAllowance" type="number" defaultValue={settings?.phoneAllowance ?? 0} className="w-full border p-2 rounded text-sm" />
-                    </div>
-                  </div>
-                  <div className="mt-2">
-                    <label className="text-xs font-bold text-gray-500">Tăng thêm khác</label>
-                    <input name="otherAllowance" type="number" defaultValue={settings?.otherAllowance ?? 0} className="w-full border p-2 rounded text-sm" />
-                  </div>
+                <div className="pt-2 border-t mt-4">
+                  <p className="text-xs text-blue-600 bg-blue-50 p-2 rounded border border-blue-100 font-medium">
+                    ℹ️ Chú ý: Các khoản phụ cấp (Trách nhiệm, Điện thoại, Khác) và cấu hình đóng BHXH nay đã được chuyển vào mục <b>"Thêm / Sửa Nhân Viên"</b> để cấu hình riêng cho từng cá nhân.
+                  </p>
                 </div>
 
                 <button disabled={isPendingSet} className="w-full bg-gray-800 text-white p-3 rounded font-bold hover:bg-black mt-4 disabled:opacity-50 transition-colors">

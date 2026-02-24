@@ -3,13 +3,41 @@
 import { useActionState, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import PrintablePayslip from "@/components/PrintablePayslip";
-import { calculateMonthlyPayroll, approvePayroll } from "@/actions/payroll";
+import { calculateMonthlyPayroll, submitPayroll } from "@/actions/payroll";
 
 export default function AccountantPageClient({ currentMonth, payrolls }: { currentMonth: number, payrolls: any[] }) {
     const [printFilterMonth, setPrintFilterMonth] = useState(currentMonth.toString());
+    const [selectedPayrollIds, setSelectedPayrollIds] = useState<string[]>([]);
 
-    // Lọc payrolls để in
+    // Lọc payrolls theo tháng
     const payrollsToPrint = payrolls.filter(p => printFilterMonth === "" || p.month.toString() === printFilterMonth);
+
+    // Khi đổi tháng lọc, tự động reset danh sách chọn
+    useEffect(() => {
+        setSelectedPayrollIds([]);
+    }, [printFilterMonth]);
+
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedPayrollIds(payrollsToPrint.map(p => p.id));
+        } else {
+            setSelectedPayrollIds([]);
+        }
+    };
+
+    const handleSelectRow = (id: string) => {
+        setSelectedPayrollIds(prev =>
+            prev.includes(id) ? prev.filter(pid => pid !== id) : [...prev, id]
+        );
+    };
+
+    const handlePrint = () => {
+        if (selectedPayrollIds.length === 0) {
+            toast.error("Vui lòng chọn ít nhất 1 dòng để in!");
+            return;
+        }
+        window.print();
+    };
 
     return (
         <>
@@ -39,11 +67,16 @@ export default function AccountantPageClient({ currentMonth, payrolls }: { curre
                                 <label className="text-[10px] font-bold text-gray-400 block uppercase mb-1">Lọc theo Tháng</label>
                                 <input type="number" value={printFilterMonth} onChange={(e) => setPrintFilterMonth(e.target.value)} min="1" max="12" className="w-full border-2 border-gray-100 p-2 rounded-xl focus:border-indigo-500 outline-none font-bold" />
                             </div>
-                            <button onClick={() => window.print()} className="bg-gray-800 hover:bg-black text-white p-2.5 rounded-xl font-bold transition flex items-center gap-2">
-                                🖨️ In PDF ({payrollsToPrint.length})
+                            <button
+                                onClick={handlePrint}
+                                className={`p-2.5 rounded-xl font-bold transition flex items-center gap-2 text-white
+                                    ${selectedPayrollIds.length > 0 ? "bg-gray-800 hover:bg-black" : "bg-gray-400 cursor-not-allowed"}
+                                `}
+                            >
+                                🖨️ In PDF ({selectedPayrollIds.length})
                             </button>
                         </div>
-                        <p className="text-xs text-gray-500 mt-3 italic">Lưu ý: Chỉ in những phiếu lương đang hiển thị bên phải theo bộ lọc tháng.</p>
+                        <p className="text-xs text-gray-500 mt-3 italic">Lưu ý: Bạn chọn nhân viên nào bên bảng bên phải thì hệ thống mới in phiếu lương của người đó.</p>
                     </div>
                 </div>
 
@@ -52,6 +85,14 @@ export default function AccountantPageClient({ currentMonth, payrolls }: { curre
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-indigo-50 text-indigo-900">
+                                    <th className="p-4 w-10 text-center">
+                                        <input
+                                            type="checkbox"
+                                            className="w-4 h-4 cursor-pointer accent-indigo-600"
+                                            checked={payrollsToPrint.length > 0 && selectedPayrollIds.length === payrollsToPrint.length}
+                                            onChange={handleSelectAll}
+                                        />
+                                    </th>
                                     <th className="p-4 font-black uppercase">Nhân viên</th>
                                     <th className="p-4 text-center font-black uppercase">Tháng</th>
                                     <th className="p-4 text-right font-black uppercase">Thực lĩnh</th>
@@ -61,11 +102,21 @@ export default function AccountantPageClient({ currentMonth, payrolls }: { curre
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {payrollsToPrint.length === 0 && (
-                                    <tr><td colSpan={5} className="p-8 text-center text-gray-400">Không có dữ liệu phiếu lương cho tháng này.</td></tr>
+                                    <tr><td colSpan={6} className="p-8 text-center text-gray-400">Không có dữ liệu phiếu lương cho tháng này.</td></tr>
                                 )}
                                 {payrollsToPrint.map((p) => (
-                                    <tr key={p.id} className="hover:bg-indigo-50/30">
-                                        <td className="p-4 font-bold text-gray-800">{p.employee.fullName}</td>
+                                    <tr key={p.id} className="hover:bg-indigo-50/30 transition-colors">
+                                        <td className="p-4 text-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedPayrollIds.includes(p.id)}
+                                                onChange={() => handleSelectRow(p.id)}
+                                                className="w-4 h-4 cursor-pointer accent-indigo-600"
+                                            />
+                                        </td>
+                                        <td className="p-4 font-bold text-gray-800 cursor-pointer" onClick={() => handleSelectRow(p.id)}>
+                                            {p.employee.fullName}
+                                        </td>
                                         <td className="p-4 text-center text-gray-500">{p.month}/{p.year}</td>
                                         <td className="p-4 text-right font-black text-indigo-600">
                                             {new Intl.NumberFormat('vi-VN').format(p.totalSalary)}đ
@@ -78,7 +129,7 @@ export default function AccountantPageClient({ currentMonth, payrolls }: { curre
                                         <td className="p-4 text-right">
                                             {p.status === "DRAFT" && (
                                                 <form action={async (formData) => {
-                                                    const res = await approvePayroll(formData);
+                                                    const res = await submitPayroll(formData);
                                                     if (res.error) toast.error(res.error);
                                                     else toast.success(res.success || "Thành công");
                                                 }}>
@@ -99,7 +150,7 @@ export default function AccountantPageClient({ currentMonth, payrolls }: { curre
 
             {/* --- VÙNG IN TRÊN BẢN PDF --- */}
             <div className="hidden print:block print-area">
-                {payrollsToPrint.map(p => (
+                {payrollsToPrint.filter(p => selectedPayrollIds.includes(p.id)).map(p => (
                     <PrintablePayslip key={p.id} payroll={p} />
                 ))}
             </div>

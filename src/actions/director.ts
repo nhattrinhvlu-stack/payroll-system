@@ -14,7 +14,7 @@ async function getActorName(): Promise<string> {
       const user = JSON.parse(session.value);
       return user.name || user.username || "Unknown";
     }
-  } catch {}
+  } catch { }
   return "System";
 }
 
@@ -22,7 +22,7 @@ async function getActorName(): Promise<string> {
 async function logAudit(actorName: string, action: string, target: string, detail?: string) {
   try {
     await db.auditLog.create({ data: { actorName, action, target, detail } });
-  } catch {}
+  } catch { }
 }
 
 // --- 1. XỬ LÝ PHÒNG BAN ---
@@ -42,6 +42,33 @@ export async function createDepartment(prevState: any, formData: FormData) {
   }
 }
 
+export async function deleteDepartment(prevState: any, formData: FormData) {
+  const id = formData.get("id") as string;
+  if (!id) return { error: "Không tìm thấy phòng ban cần xóa!" };
+
+  try {
+    // 1. Kiểm tra xem phòng ban này có nhân viên nào không
+    const dept = await db.department.findUnique({
+      where: { id },
+      include: { employees: true }
+    });
+
+    if (!dept) return { error: "Phòng ban không tồn tại!" };
+    if (dept.employees.length > 0) {
+      return { error: `Không thể xóa! Đang có ${dept.employees.length} nhân viên trong phòng ban này.` };
+    }
+
+    // 2. Xóa
+    await db.department.delete({ where: { id } });
+    const actor = await getActorName();
+    await logAudit(actor, "Xóa phòng ban", dept.name);
+    revalidatePath("/director");
+    return { success: "Đã xóa phòng ban thành công!" };
+  } catch (e) {
+    return { error: "Lỗi khi xóa phòng ban." };
+  }
+}
+
 // --- 2. TẠO NHÂN VIÊN ---
 export async function createEmployee(prevState: any, formData: FormData) {
   const fullName = formData.get("fullName") as string;
@@ -53,6 +80,12 @@ export async function createEmployee(prevState: any, formData: FormData) {
   const phone = formData.get("phone") as string;
   const dobStr = formData.get("dob") as string;
   const dob = dobStr ? new Date(dobStr) : null;
+
+  // Cấu hình phụ cấp & BHXH cá nhân
+  const responsibilityAmount = parseFloat(formData.get("responsibilityAmount") as string) || 0;
+  const phoneAllowance = parseFloat(formData.get("phoneAllowance") as string) || 0;
+  const otherAllowance = parseFloat(formData.get("otherAllowance") as string) || 0;
+  const hasInsurance = formData.get("hasInsurance") === "true";
 
   if (!username || !fullName) return { error: "Thiếu thông tin bắt buộc!" };
 
@@ -68,6 +101,10 @@ export async function createEmployee(prevState: any, formData: FormData) {
         phone: phone || null,
         dob,
         baseSalary,
+        responsibilityAmount,
+        phoneAllowance,
+        otherAllowance,
+        hasInsurance,
         departmentId: departmentId || null,
         role: "EMPLOYEE",
       },
@@ -93,6 +130,12 @@ export async function updateEmployee(prevState: any, formData: FormData) {
   const dobStr = formData.get("dob") as string;
   const dob = dobStr ? new Date(dobStr) : null;
 
+  // Cấu hình phụ cấp & BHXH cá nhân
+  const responsibilityAmount = parseFloat(formData.get("responsibilityAmount") as string) || 0;
+  const phoneAllowance = parseFloat(formData.get("phoneAllowance") as string) || 0;
+  const otherAllowance = parseFloat(formData.get("otherAllowance") as string) || 0;
+  const hasInsurance = formData.get("hasInsurance") === "true";
+
   if (!id || !fullName) return { error: "Thiếu thông tin bắt buộc!" };
 
   try {
@@ -101,6 +144,10 @@ export async function updateEmployee(prevState: any, formData: FormData) {
       data: {
         fullName,
         baseSalary,
+        responsibilityAmount,
+        phoneAllowance,
+        otherAllowance,
+        hasInsurance,
         departmentId: departmentId || null,
         email: email || null,
         phone: phone || null,
@@ -192,9 +239,6 @@ export async function updateSettings(prevState: any, formData: FormData) {
   const overtimeRatio = parseFloat(formData.get("overtimeRatio") as string);
   const fuelPricePerKm = parseFloat(formData.get("fuelPricePerKm") as string);
   const insurancePercent = parseFloat(formData.get("insurancePercent") as string) || 0;
-  const responsibilityAmount = parseFloat(formData.get("responsibilityAmount") as string);
-  const phoneAllowance = parseFloat(formData.get("phoneAllowance") as string);
-  const otherAllowance = parseFloat(formData.get("otherAllowance") as string);
 
   try {
     await db.globalSettings.upsert({
@@ -204,9 +248,6 @@ export async function updateSettings(prevState: any, formData: FormData) {
         overtimeRatio,
         fuelPricePerKm,
         insurancePercent,
-        responsibilityAmount,
-        phoneAllowance,
-        otherAllowance,
       },
       create: {
         id: "default",
@@ -214,9 +255,6 @@ export async function updateSettings(prevState: any, formData: FormData) {
         overtimeRatio,
         fuelPricePerKm,
         insurancePercent,
-        responsibilityAmount,
-        phoneAllowance,
-        otherAllowance,
       },
     });
     const actor = await getActorName();
@@ -225,5 +263,51 @@ export async function updateSettings(prevState: any, formData: FormData) {
     return { success: "Cập nhật cấu hình thành công!" };
   } catch (e) {
     return { error: "Lỗi khi lưu cấu hình!" };
+  }
+}
+
+// --- 8. LẤY CHI TIẾT NHÂN VIÊN THEO THÁNG ---
+export async function getEmployeeDetailByMonth(employeeId: string, month: number, year: number) {
+  try {
+    const employee = await db.employee.findUnique({
+      where: { id: employeeId },
+      include: { department: true }
+    });
+
+    if (!employee) return { error: "Không tìm thấy nhân viên" };
+
+    const firstDay = new Date(year, month - 1, 1);
+    const nextMonthFirstDay = new Date(year, month, 1);
+
+    const attendances = await db.attendance.findMany({
+      where: {
+        employeeId,
+        date: {
+          gte: firstDay,
+          lt: nextMonthFirstDay
+        }
+      },
+      orderBy: { date: "asc" }
+    });
+
+    const leaves = await db.leaveRequest.findMany({
+      where: {
+        employeeId,
+        AND: [
+          { startDate: { lt: nextMonthFirstDay } },
+          { endDate: { gte: firstDay } }
+        ]
+      },
+      orderBy: { startDate: "asc" }
+    });
+
+    const payroll = await db.payroll.findFirst({
+      where: { employeeId, month, year }
+    });
+
+    return { success: true, employee, attendances, leaves, payroll };
+  } catch (error) {
+    console.error("Lỗi khi lấy chi tiết NV:", error);
+    return { error: "Lỗi kết nối CSDL hoặc tham số không hợp lệ" };
   }
 }

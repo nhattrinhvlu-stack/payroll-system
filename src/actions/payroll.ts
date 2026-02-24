@@ -15,6 +15,16 @@ export async function calculateMonthlyPayroll(formData: FormData) {
     const employees = await db.employee.findMany();
 
     for (const emp of employees) {
+      // *Bảo vệ dữ liệu*: Nếu nhân viên đã có phiếu lương tháng này và không phải bản nháp (DRAFT)
+      // Tức là đã PENDING (Gửi duyệt) hoặc APPROVED (Đã duyệt), thì bỏ qua không tính đè lại.
+      const existingPayroll = await db.payroll.findUnique({
+        where: { employeeId_month_year: { employeeId: emp.id, month, year } }
+      });
+
+      if (existingPayroll && existingPayroll.status !== "DRAFT") {
+        continue;
+      }
+
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 1);
 
@@ -30,12 +40,12 @@ export async function calculateMonthlyPayroll(formData: FormData) {
 
       const overtimeSalary = overtimeHours * (emp.baseSalary / settings.standardWorkDays / 8) * settings.overtimeRatio;
       const fuelAllowance = totalKm * settings.fuelPricePerKm;
-      const insurance = (emp.baseSalary * settings.insurancePercent) / 100;
+      const insurance = emp.hasInsurance ? (emp.baseSalary * settings.insurancePercent) / 100 : 0;
       const salaryByDays = (emp.baseSalary / settings.standardWorkDays) * actualWorkDays;
 
-      const totalSalary = salaryByDays + overtimeSalary + fuelAllowance + 
-                          settings.responsibilityAmount + settings.phoneAllowance + 
-                          totalDailyAllowance - insurance - totalDailyAdvance;
+      const totalSalary = salaryByDays + overtimeSalary + fuelAllowance +
+        emp.responsibilityAmount + emp.phoneAllowance +
+        totalDailyAllowance - insurance - totalDailyAdvance;
 
       await db.payroll.upsert({
         where: { employeeId_month_year: { employeeId: emp.id, month, year } },
@@ -43,15 +53,15 @@ export async function calculateMonthlyPayroll(formData: FormData) {
           baseSalary: emp.baseSalary,
           standardDays: settings.standardWorkDays,
           actualWorkDays, overtimeHours, overtimeSalary, kmTraveled: totalKm,
-          fuelAllowance, responsibility: settings.responsibilityAmount,
-          phoneAllowance: settings.phoneAllowance, otherAllowance: totalDailyAllowance,
+          fuelAllowance, responsibility: emp.responsibilityAmount,
+          phoneAllowance: emp.phoneAllowance, otherAllowance: totalDailyAllowance,
           insurance, advancePayment: totalDailyAdvance, totalSalary, status: "DRAFT"
         },
         create: {
           employeeId: emp.id, month, year, baseSalary: emp.baseSalary,
           standardDays: settings.standardWorkDays, actualWorkDays,
           overtimeHours, overtimeSalary, kmTraveled: totalKm, fuelAllowance,
-          responsibility: settings.responsibilityAmount, phoneAllowance: settings.phoneAllowance,
+          responsibility: emp.responsibilityAmount, phoneAllowance: emp.phoneAllowance,
           otherAllowance: totalDailyAllowance, insurance, advancePayment: totalDailyAdvance,
           totalSalary, status: "DRAFT"
         }
@@ -61,6 +71,22 @@ export async function calculateMonthlyPayroll(formData: FormData) {
     return { success: "Tính lương thành công!", error: "" };
   } catch (err) {
     return { error: "Lỗi hệ thống khi tính lương!", success: "" };
+  }
+}
+
+// 1.5. Hàm gửi duyệt (Kế toán gửi lên Giám đốc)
+export async function submitPayroll(formData: FormData) {
+  const id = formData.get("id") as string;
+  try {
+    await db.payroll.update({
+      where: { id },
+      data: { status: "PENDING" }
+    });
+    revalidatePath("/accountant");
+    revalidatePath("/director");
+    return { success: "Đã gửi phiếu lương chờ duyệt!", error: "" };
+  } catch (err) {
+    return { error: "Lỗi gửi duyệt!", success: "" };
   }
 }
 
