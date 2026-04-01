@@ -67,16 +67,27 @@ export default function DirectorDashboard({
           { id: "overview", label: "📊 Tổng quan" },
           { id: "hr", label: "👥 Nhân sự & Hợp đồng" },
           { id: "payroll", label: "💰 Lương & Phép" },
-          { id: "settings", label: "⚙️ Cài đặt & Lịch sử" }
+          { id: "settings", label: "⚙️ Cài đặt & Lịch sử" },
+          { id: "inventory", label: "📦 Vật Tư", href: "/director/inventory" }
         ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`py-4 px-2 font-bold whitespace-nowrap border-b-4 transition-colors ${activeTab === tab.id ? "border-blue-600 text-blue-700" : "border-transparent text-gray-500 hover:text-gray-800"
-              }`}
-          >
-            {tab.label}
-          </button>
+          "href" in tab ? (
+            <a
+              key={tab.id}
+              href={tab.href}
+              className="py-4 px-2 font-bold whitespace-nowrap border-b-4 border-transparent text-gray-500 hover:text-gray-800 transition-colors"
+            >
+              {tab.label}
+            </a>
+          ) : (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`py-4 px-2 font-bold whitespace-nowrap border-b-4 transition-colors ${activeTab === tab.id ? "border-blue-600 text-blue-700" : "border-transparent text-gray-500 hover:text-gray-800"
+                }`}
+            >
+              {tab.label}
+            </button>
+          )
         ))}
       </div>
 

@@ -87,10 +87,11 @@ model Employee {
 
   isActive    Boolean   @default(true)
 
-  payrolls      Payroll[]
-  attendances   Attendance[]
-  leaveRequests LeaveRequest[]
-  contracts     Contract[]
+  payrolls             Payroll[]
+  attendances          Attendance[]
+  leaveRequests        LeaveRequest[]
+  contracts            Contract[]
+  materialTransactions MaterialTransaction[]
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -212,4 +213,96 @@ model AuditLog {
   detail    String?
 
   createdAt DateTime @default(now())
+}
+
+// --- QUẢN LÝ VẬT TƯ ---
+
+enum TransactionType {
+  IMPORT   // Nhập vật tư từ nhà cung cấp
+  EXPORT   // Xuất cấp phát cho bộ phận/nhân viên
+  ADJUST   // Điều chỉnh tồn kho (chỉ DIRECTOR)
+  RETURN   // Nhân viên trả lại kho
+}
+
+enum TransactionStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+// --- 10. DANH MỤC LOẠI VẬT TƯ ---
+model MaterialCategory {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  description String?
+  materials   Material[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+// --- 11. NHÀ CUNG CẤP ---
+model Supplier {
+  id           String               @id @default(cuid())
+  name         String
+  phone        String?
+  address      String?
+  contactName  String?
+  note         String?
+  isActive     Boolean              @default(true)
+  transactions MaterialTransaction[]
+
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+}
+
+// --- 12. DANH MỤC VẬT TƯ (MASTER DATA) ---
+model Material {
+  id            String               @id @default(cuid())
+  code          String               @unique
+  name          String
+  unit          String
+  description   String?
+  minStockLevel Float                @default(0)
+  currentStock  Float                @default(0)
+  unitPrice     Float                @default(0)
+  isActive      Boolean              @default(true)
+
+  categoryId    String?
+  category      MaterialCategory?    @relation(fields: [categoryId], references: [id])
+
+  transactions  MaterialTransaction[]
+
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+}
+
+// --- 13. NHẬT KÝ GIAO DỊCH VẬT TƯ ---
+model MaterialTransaction {
+  id              String            @id @default(cuid())
+  materialId      String
+  material        Material          @relation(fields: [materialId], references: [id])
+
+  type            TransactionType
+  status          TransactionStatus @default(CONFIRMED)
+
+  quantity        Float
+  unitPrice       Float             @default(0)
+  stockBefore     Float
+  stockAfter      Float
+
+  transactionDate DateTime          @default(now())
+  reference       String?
+  reason          String?
+  note            String?
+
+  supplierId      String?
+  supplier        Supplier?         @relation(fields: [supplierId], references: [id])
+
+  receivedById    String?
+  receivedBy      Employee?         @relation(fields: [receivedById], references: [id])
+
+  createdByName   String
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 }
