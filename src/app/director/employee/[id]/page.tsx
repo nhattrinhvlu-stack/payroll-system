@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
