@@ -414,8 +414,21 @@ export default function DirectorDashboard({
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase">Giá xăng (VNĐ/km)</label>
-                  <input name="fuelPricePerKm" type="number" defaultValue={settings?.fuelPricePerKm ?? 5000} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500" />
+                  <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Hỗ trợ Xăng xe (VNĐ / ngày đi làm)</label>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 w-20 shrink-0">1 – 15 km</span>
+                      <input name="fuelPrice1to15" type="number" defaultValue={settings?.fuelPrice1to15 ?? 30000} className="flex-1 border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 w-20 shrink-0">16 – 30 km</span>
+                      <input name="fuelPrice20to30" type="number" defaultValue={settings?.fuelPrice20to30 ?? 50000} className="flex-1 border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 w-20 shrink-0">Trên 30 km</span>
+                      <input name="fuelPriceAbove30" type="number" defaultValue={settings?.fuelPriceAbove30 ?? 80000} className="flex-1 border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="pt-2 border-t mt-4">

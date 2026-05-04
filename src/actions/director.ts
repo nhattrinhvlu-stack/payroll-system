@@ -237,8 +237,10 @@ export async function createContract(prevState: any, formData: FormData) {
 export async function updateSettings(prevState: any, formData: FormData) {
   const standardWorkDays = parseInt(formData.get("standardWorkDays") as string);
   const overtimeRatio = parseFloat(formData.get("overtimeRatio") as string);
-  const fuelPricePerKm = parseFloat(formData.get("fuelPricePerKm") as string);
   const insurancePercent = parseFloat(formData.get("insurancePercent") as string) || 0;
+  const fuelPrice1to15 = parseFloat(formData.get("fuelPrice1to15") as string) || 0;
+  const fuelPrice20to30 = parseFloat(formData.get("fuelPrice20to30") as string) || 0;
+  const fuelPriceAbove30 = parseFloat(formData.get("fuelPriceAbove30") as string) || 0;
 
   try {
     await db.globalSettings.upsert({
@@ -246,15 +248,19 @@ export async function updateSettings(prevState: any, formData: FormData) {
       update: {
         standardWorkDays,
         overtimeRatio,
-        fuelPricePerKm,
         insurancePercent,
+        fuelPrice1to15,
+        fuelPrice20to30,
+        fuelPriceAbove30,
       },
       create: {
         id: "default",
         standardWorkDays,
         overtimeRatio,
-        fuelPricePerKm,
         insurancePercent,
+        fuelPrice1to15,
+        fuelPrice20to30,
+        fuelPriceAbove30,
       },
     });
     const actor = await getActorName();
