@@ -3,6 +3,12 @@
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
+function getFuelPrice(km: number, settings: { fuelPrice1to15: number; fuelPrice20to30: number; fuelPriceAbove30: number }): number {
+  if (km <= 15) return settings.fuelPrice1to15;
+  if (km <= 30) return settings.fuelPrice20to30;
+  return settings.fuelPriceAbove30;
+}
+
 // 1. Hàm tính lương
 export async function calculateMonthlyPayroll(formData: FormData) {
   const month = parseInt(formData.get("month") as string);
@@ -39,7 +45,9 @@ export async function calculateMonthlyPayroll(formData: FormData) {
       const totalDailyAdvance = attendances.reduce((sum, a) => sum + a.dailyAdvance, 0);
 
       const overtimeSalary = overtimeHours * (emp.baseSalary / settings.standardWorkDays / 8) * settings.overtimeRatio;
-      const fuelAllowance = totalKm * settings.fuelPricePerKm;
+      const fuelAllowance = attendances.reduce((sum, a) => {
+        return sum + a.kmTraveled * getFuelPrice(a.kmTraveled, settings);
+      }, 0);
       const insurance = emp.hasInsurance ? (emp.baseSalary * settings.insurancePercent) / 100 : 0;
       const salaryByDays = (emp.baseSalary / settings.standardWorkDays) * actualWorkDays;
 

@@ -103,8 +103,13 @@ model GlobalSettings {
 
   standardWorkDays      Int      @default(26)
   overtimeRatio         Float    @default(1.5)
-  fuelPricePerKm        Float    @default(5000)
-  insurancePercent      Float    @default(0) // Giữ lại % để tính nếu hasInsurance = true
+  fuelPricePerKm        Float    @default(5000)   // legacy, không dùng trong tính toán nữa
+  insurancePercent      Float    @default(0)
+
+  // Đơn giá xăng theo bán kính
+  fuelPrice1to15        Float    @default(3000)   // 1–15 km
+  fuelPrice20to30       Float    @default(4000)   // 20–30 km
+  fuelPriceAbove30      Float    @default(5000)   // trên 30 km
 
   updatedAt             DateTime @updatedAt
 }

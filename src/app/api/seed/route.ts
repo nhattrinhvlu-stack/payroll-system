@@ -8,7 +8,12 @@ export async function GET() {
     await db.globalSettings.upsert({
       where: { id: "default" },
       update: {},
-      create: { id: "default" },
+      create: {
+        id: "default",
+        fuelPrice1to15: 3000,
+        fuelPrice20to30: 4000,
+        fuelPriceAbove30: 5000,
+      },
     });
 
     // 2. Tạo Phòng ban mẫu
