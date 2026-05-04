@@ -64,7 +64,8 @@ export default async function SettingsPage() {
           <hr />
 
           <div>
-            <label className="block font-bold text-gray-700 mb-2">Định mức hỗ trợ Xăng xe (theo bán kính)</label>
+            <label className="block font-bold text-gray-700 mb-2">Định mức hỗ trợ Xăng xe (mức cố định / ngày đi làm)</label>
+            <p className="text-xs text-gray-400 mb-3">Nhân viên nhập km mỗi ngày → hệ thống tự xếp khoảng và cộng mức tương ứng.</p>
             <div className="space-y-3">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Bán kính 1 – 15 km</p>
@@ -72,22 +73,22 @@ export default async function SettingsPage() {
                   <input
                     name="fuelPrice1to15"
                     type="number"
-                    defaultValue={settings?.fuelPrice1to15 ?? 3000}
+                    defaultValue={settings?.fuelPrice1to15 ?? 30000}
                     className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   />
-                  <span className="ml-3 text-gray-500 font-medium whitespace-nowrap">VNĐ / km</span>
+                  <span className="ml-3 text-gray-500 font-medium whitespace-nowrap">VNĐ / ngày</span>
                 </div>
               </div>
               <div>
-                <p className="text-sm text-gray-500 mb-1">Bán kính 20 – 30 km</p>
+                <p className="text-sm text-gray-500 mb-1">Bán kính 16 – 30 km</p>
                 <div className="flex items-center">
                   <input
                     name="fuelPrice20to30"
                     type="number"
-                    defaultValue={settings?.fuelPrice20to30 ?? 4000}
+                    defaultValue={settings?.fuelPrice20to30 ?? 50000}
                     className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   />
-                  <span className="ml-3 text-gray-500 font-medium whitespace-nowrap">VNĐ / km</span>
+                  <span className="ml-3 text-gray-500 font-medium whitespace-nowrap">VNĐ / ngày</span>
                 </div>
               </div>
               <div>
@@ -96,10 +97,10 @@ export default async function SettingsPage() {
                   <input
                     name="fuelPriceAbove30"
                     type="number"
-                    defaultValue={settings?.fuelPriceAbove30 ?? 5000}
+                    defaultValue={settings?.fuelPriceAbove30 ?? 80000}
                     className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   />
-                  <span className="ml-3 text-gray-500 font-medium whitespace-nowrap">VNĐ / km</span>
+                  <span className="ml-3 text-gray-500 font-medium whitespace-nowrap">VNĐ / ngày</span>
                 </div>
               </div>
             </div>
