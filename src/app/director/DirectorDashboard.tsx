@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { createDepartment, createEmployee, updateSettings, deleteDepartment } from "@/actions/director";
 import { approvePayroll, rejectPayroll } from "@/actions/payroll";
 import { logout } from "@/actions/auth";
+import ChangePasswordForm from "@/app/employee/ChangePasswordForm";
 import EmployeeListCard from "./EmployeeListCard";
 import ContractListCard from "./ContractListCard";
 import AuditLogCard from "./AuditLogCard";
@@ -68,6 +69,7 @@ export default function DirectorDashboard({
           { id: "hr", label: "👥 Nhân sự & Hợp đồng" },
           { id: "payroll", label: "💰 Lương & Phép" },
           { id: "settings", label: "⚙️ Cài đặt & Lịch sử" },
+          { id: "account", label: "👤 Tài Khoản" },
           { id: "inventory", label: "📦 Vật Tư", href: "/director/inventory" }
         ].map(tab => (
           "href" in tab ? (
@@ -432,6 +434,16 @@ export default function DirectorDashboard({
               <AuditLogCard auditLogs={auditLogs} />
             </div>
           </>
+        )}
+
+        {/* --- TAB: TÀI KHOẢN --- */}
+        {activeTab === "account" && (
+          <div className="lg:col-span-3">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">👤 Tài Khoản Của Tôi</h2>
+            <div className="max-w-md">
+              <ChangePasswordForm />
+            </div>
+          </div>
         )}
       </div>
     </div>

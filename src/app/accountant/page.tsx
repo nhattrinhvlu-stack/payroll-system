@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { db } from "@/lib/db";
 import { logout } from "@/actions/auth";
+import ChangePasswordForm from "@/app/employee/ChangePasswordForm";
 import AccountantPageClient from "./AccountantPageClient";
 import DateSelector from "./DateSelector";
 import AttendanceTable from "./AttendanceTable";
@@ -86,6 +87,14 @@ export default async function AccountantPage({
           </div>
           <span className="ml-auto text-gray-400 group-hover:text-blue-600 text-lg">→</span>
         </a>
+      </div>
+
+      {/* --- PHẦN 4: TÀI KHOẢN --- */}
+      <div className="mt-10">
+        <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">👤 Tài Khoản Của Tôi</h2>
+        <div className="max-w-md">
+          <ChangePasswordForm />
+        </div>
       </div>
     </div>
   );
