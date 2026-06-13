@@ -63,11 +63,29 @@ export async function GET() {
       },
     });
 
+    // 5. Tạo Tài khoản Thủ Kho (thukho/123456)
+    await db.employee.upsert({
+      where: { username: "thukho" },
+      update: {
+        role: "WAREHOUSE",
+        password: hashedPassword,
+      },
+      create: {
+        username: "thukho",
+        password: hashedPassword,
+        fullName: "Nguyễn Văn Thủ Kho",
+        role: "WAREHOUSE",
+        baseSalary: 12000000,
+        department: { connect: { name: "Phòng Kỹ Thuật" } },
+      },
+    });
+
     return NextResponse.json({
       message: "✅ Khởi tạo thành công!",
       accounts: [
         { username: "admin", password: "123456", role: "Giám Đốc" },
         { username: "ketoan", password: "123456", role: "Kế Toán" },
+        { username: "thukho", password: "123456", role: "Thủ Kho" },
       ]
     });
   } catch (error) {

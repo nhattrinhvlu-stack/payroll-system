@@ -47,6 +47,8 @@ export async function login(formData: FormData) {
       redirect("/director");
     } else if (user.role === "ACCOUNTANT") {
       redirect("/accountant");
+    } else if (user.role === "WAREHOUSE") {
+      redirect("/warehouse");
     } else {
       // Mặc định là nhân viên thường
       redirect("/employee");

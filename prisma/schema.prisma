@@ -12,6 +12,7 @@ datasource db {
 enum Role {
   DIRECTOR
   ACCOUNTANT
+  WAREHOUSE
   EMPLOYEE
 }
 

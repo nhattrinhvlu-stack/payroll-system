@@ -32,6 +32,8 @@ function revalidateAll() {
   revalidatePath("/director/inventory");
   revalidatePath("/accountant");
   revalidatePath("/accountant/inventory");
+  revalidatePath("/warehouse");
+  revalidatePath("/warehouse/inventory");
 }
 
 // ============================================================
@@ -111,7 +113,7 @@ export async function deleteMaterialCategory(prevState: any, formData: FormData)
 
 export async function createSupplier(prevState: any, formData: FormData) {
   const { name: actorName, role } = await getActor();
-  if (!["DIRECTOR", "ACCOUNTANT"].includes(role)) return { error: "Không có quyền thực hiện!" };
+  if (!["DIRECTOR", "ACCOUNTANT", "WAREHOUSE"].includes(role)) return { error: "Không có quyền thực hiện!" };
 
   const name = (formData.get("name") as string)?.trim();
   const phone = (formData.get("phone") as string)?.trim();
@@ -141,7 +143,7 @@ export async function createSupplier(prevState: any, formData: FormData) {
 
 export async function updateSupplier(prevState: any, formData: FormData) {
   const { name: actorName, role } = await getActor();
-  if (!["DIRECTOR", "ACCOUNTANT"].includes(role)) return { error: "Không có quyền thực hiện!" };
+  if (!["DIRECTOR", "ACCOUNTANT", "WAREHOUSE"].includes(role)) return { error: "Không có quyền thực hiện!" };
 
   const id = formData.get("id") as string;
   const name = (formData.get("name") as string)?.trim();
@@ -196,7 +198,7 @@ export async function toggleSupplierActive(prevState: any, formData: FormData) {
 
 export async function createMaterial(prevState: any, formData: FormData) {
   const { name: actorName, role } = await getActor();
-  if (!["DIRECTOR", "ACCOUNTANT"].includes(role)) return { error: "Không có quyền thực hiện!" };
+  if (!["DIRECTOR", "ACCOUNTANT", "WAREHOUSE"].includes(role)) return { error: "Không có quyền thực hiện!" };
 
   const code = (formData.get("code") as string)?.trim().toUpperCase();
   const name = (formData.get("name") as string)?.trim();
@@ -230,7 +232,7 @@ export async function createMaterial(prevState: any, formData: FormData) {
 
 export async function updateMaterial(prevState: any, formData: FormData) {
   const { name: actorName, role } = await getActor();
-  if (!["DIRECTOR", "ACCOUNTANT"].includes(role)) return { error: "Không có quyền thực hiện!" };
+  if (!["DIRECTOR", "ACCOUNTANT", "WAREHOUSE"].includes(role)) return { error: "Không có quyền thực hiện!" };
 
   const id = formData.get("id") as string;
   const name = (formData.get("name") as string)?.trim();
@@ -287,7 +289,7 @@ export async function toggleMaterialActive(prevState: any, formData: FormData) {
 
 export async function importMaterial(prevState: any, formData: FormData) {
   const { name: actorName, role } = await getActor();
-  if (!["DIRECTOR", "ACCOUNTANT"].includes(role)) return { error: "Không có quyền thực hiện!" };
+  if (!["DIRECTOR", "ACCOUNTANT", "WAREHOUSE"].includes(role)) return { error: "Không có quyền thực hiện!" };
 
   const materialId = formData.get("materialId") as string;
   const quantity = parseFloat(formData.get("quantity") as string);
@@ -351,7 +353,7 @@ export async function importMaterial(prevState: any, formData: FormData) {
 
 export async function exportMaterial(prevState: any, formData: FormData) {
   const { name: actorName, role } = await getActor();
-  if (!["DIRECTOR", "ACCOUNTANT"].includes(role)) return { error: "Không có quyền thực hiện!" };
+  if (!["DIRECTOR", "ACCOUNTANT", "WAREHOUSE"].includes(role)) return { error: "Không có quyền thực hiện!" };
 
   const materialId = formData.get("materialId") as string;
   const quantity = parseFloat(formData.get("quantity") as string);
@@ -475,7 +477,7 @@ export async function adjustStock(prevState: any, formData: FormData) {
 
 export async function returnMaterial(prevState: any, formData: FormData) {
   const { name: actorName, role } = await getActor();
-  if (!["DIRECTOR", "ACCOUNTANT"].includes(role)) return { error: "Không có quyền thực hiện!" };
+  if (!["DIRECTOR", "ACCOUNTANT", "WAREHOUSE"].includes(role)) return { error: "Không có quyền thực hiện!" };
 
   const materialId = formData.get("materialId") as string;
   const quantity = parseFloat(formData.get("quantity") as string);
