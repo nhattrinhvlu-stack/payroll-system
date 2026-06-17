@@ -49,6 +49,11 @@ enum ContractType {
   PROBATION   // Thử việc
 }
 
+enum SalaryType {
+  MONTHLY   // Lương tháng
+  DAILY     // Lương ngày (cuối ngày nhận)
+}
+
 // --- 2. QUẢN LÝ PHÒNG BAN ---
 model Department {
   id          String     @id @default(cuid())
@@ -76,6 +81,8 @@ model Employee {
   dob         DateTime?
 
   // Lương & Phụ cấp Cá nhân (MỚI)
+  salaryType           SalaryType @default(MONTHLY)
+  dailyWage            Float   @default(0)   // Tiền/ngày, dùng khi salaryType = DAILY
   baseSalary           Float
   responsibilityAmount Float   @default(0)
   phoneAllowance       Float   @default(0)
@@ -128,6 +135,10 @@ model Attendance {
 
   dailyAllowance Float    @default(0)
   dailyAdvance   Float    @default(0)
+
+  // Theo dõi trả lương ngày
+  isPaid      Boolean  @default(false)
+  paidAt      DateTime?
 
   note        String?
 

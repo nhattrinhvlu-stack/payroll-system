@@ -2,14 +2,7 @@
 
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-
-// Trả về mức hỗ trợ xăng cố định (VNĐ/ngày) theo bán kính. km=0 không tính.
-function getDailyFuelAllowance(km: number, settings: { fuelPrice1to15: number; fuelPrice20to30: number; fuelPriceAbove30: number }): number {
-  if (km <= 0) return 0;
-  if (km <= 15) return settings.fuelPrice1to15;
-  if (km <= 30) return settings.fuelPrice20to30;
-  return settings.fuelPriceAbove30;
-}
+import { getDailyFuelAllowance } from "@/lib/salary";
 
 // 1. Hàm tính lương
 export async function calculateMonthlyPayroll(formData: FormData) {
@@ -20,7 +13,8 @@ export async function calculateMonthlyPayroll(formData: FormData) {
     const settings = await db.globalSettings.findUnique({ where: { id: "default" } });
     if (!settings) return { error: "Chưa cấu hình thiết lập lương chung!" };
 
-    const employees = await db.employee.findMany();
+    // Chỉ tính lương tháng cho nhân viên lương tháng; lương ngày trả riêng cuối ngày.
+    const employees = await db.employee.findMany({ where: { salaryType: "MONTHLY" } });
 
     for (const emp of employees) {
       // *Bảo vệ dữ liệu*: Nếu nhân viên đã có phiếu lương tháng này và không phải bản nháp (DRAFT)

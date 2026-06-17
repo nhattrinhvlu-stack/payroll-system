@@ -162,6 +162,20 @@ export default function EmployeeListCard({ employees, departments }: Props) {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
+                  <label className="font-bold text-gray-600 block mb-1">Loại lương</label>
+                  <select name="salaryType" defaultValue={editingEmp.salaryType || "MONTHLY"} className="w-full border p-2 rounded bg-white">
+                    <option value="MONTHLY">Lương theo tháng</option>
+                    <option value="DAILY">Lương theo ngày</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="font-bold text-gray-600 block mb-1">Lương/ngày</label>
+                  <input name="dailyWage" type="number" defaultValue={editingEmp.dailyWage || 0} className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
                   <label className="font-bold text-gray-600 block mb-1">Ngày sinh</label>
                   <input name="dob" type="date" defaultValue={editingEmp.dob ? new Date(editingEmp.dob).toISOString().split('T')[0] : ""} className="w-full border p-2 rounded" />
                 </div>

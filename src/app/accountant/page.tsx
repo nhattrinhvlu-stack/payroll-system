@@ -71,6 +71,24 @@ export default async function AccountantPage({
       <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">💰 Tính & Quản lý Lương tháng</h2>
       <AccountantPageClient currentMonth={currentMonth} payrolls={payrolls as any} />
 
+      {/* --- PHẦN 2.5: BẢNG LƯƠNG NGÀY --- */}
+      <div className="mt-10">
+        <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">📋 Lương ngày</h2>
+        <a
+          href="/accountant/daily-payroll"
+          className="inline-flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-5 shadow hover:shadow-md hover:border-green-300 transition group"
+        >
+          <div className="bg-green-100 text-green-700 text-2xl w-12 h-12 rounded-xl flex items-center justify-center font-bold group-hover:bg-green-600 group-hover:text-white transition">
+            📋
+          </div>
+          <div>
+            <div className="font-bold text-gray-800">Mở Bảng lương ngày</div>
+            <div className="text-sm text-gray-500">Xem chi tiết tiền lương từng ngày & đánh dấu đã trả</div>
+          </div>
+          <span className="ml-auto text-gray-400 group-hover:text-green-600 text-lg">→</span>
+        </a>
+      </div>
+
       {/* --- PHẦN 3: QUẢN LÝ VẬT TƯ --- */}
       <div className="mt-10">
         <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">📦 Quản lý Vật Tư</h2>

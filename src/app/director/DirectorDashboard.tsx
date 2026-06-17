@@ -70,6 +70,7 @@ export default function DirectorDashboard({
           { id: "payroll", label: "💰 Lương & Phép" },
           { id: "settings", label: "⚙️ Cài đặt & Lịch sử" },
           { id: "account", label: "👤 Tài Khoản" },
+          { id: "attendance", label: "🕒 Chấm công", href: "/director/attendance" },
           { id: "inventory", label: "📦 Vật Tư", href: "/director/inventory" }
         ].map(tab => (
           "href" in tab ? (
@@ -156,6 +157,15 @@ export default function DirectorDashboard({
                   <input name="baseSalary" type="number" required placeholder="Lương Cbản (*)" className="w-full border p-2 rounded text-green-700 outline-none text-sm font-bold" />
                 </div>
 
+                {/* Loại lương */}
+                <div className="grid grid-cols-2 gap-2">
+                  <select name="salaryType" defaultValue="MONTHLY" className="w-full border p-2 rounded bg-white text-sm">
+                    <option value="MONTHLY">Lương theo tháng</option>
+                    <option value="DAILY">Lương theo ngày</option>
+                  </select>
+                  <input name="dailyWage" type="number" placeholder="Lương/ngày (nếu trả theo ngày)" className="w-full border p-2 rounded text-green-700 outline-none text-sm font-bold" />
+                </div>
+
                 {/* Phụ cấp cá nhân */}
                 <div className="bg-gray-50 p-3 rounded border border-gray-100 space-y-2">
                   <p className="text-xs font-bold text-gray-500 uppercase">Phụ cấp & Cấu hình</p>
@@ -234,6 +244,21 @@ export default function DirectorDashboard({
         {/* --- TAB: PAYROLL --- */}
         {activeTab === "payroll" && (
           <div className="lg:col-span-3">
+            {/* Lối vào bảng lương ngày */}
+            <a
+              href="/director/daily-payroll"
+              className="inline-flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md hover:border-green-300 transition group mb-6"
+            >
+              <div className="bg-green-100 text-green-700 text-xl w-10 h-10 rounded-lg flex items-center justify-center font-bold group-hover:bg-green-600 group-hover:text-white transition">
+                📋
+              </div>
+              <div>
+                <div className="font-bold text-gray-800">Bảng lương ngày</div>
+                <div className="text-xs text-gray-500">Xem chi tiết lương ngày & trạng thái đã trả</div>
+              </div>
+              <span className="ml-auto text-gray-400 group-hover:text-green-600 text-lg">→</span>
+            </a>
+
             {/* Duyệt lương */}
             {pendingPayrolls.length > 0 && (
               <div className="bg-orange-50 p-6 rounded-xl shadow-md border border-orange-200 animate-pulse-slow mb-6">

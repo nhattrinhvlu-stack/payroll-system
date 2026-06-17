@@ -87,6 +87,10 @@ export async function createEmployee(prevState: any, formData: FormData) {
   const otherAllowance = parseFloat(formData.get("otherAllowance") as string) || 0;
   const hasInsurance = formData.get("hasInsurance") === "true";
 
+  // Loại lương: theo tháng (mặc định) hoặc theo ngày
+  const salaryType = formData.get("salaryType") === "DAILY" ? "DAILY" : "MONTHLY";
+  const dailyWage = parseFloat(formData.get("dailyWage") as string) || 0;
+
   if (!username || !fullName) return { error: "Thiếu thông tin bắt buộc!" };
 
   const hashedPassword = await hash("123456", 10);
@@ -100,6 +104,8 @@ export async function createEmployee(prevState: any, formData: FormData) {
         email: email || null,
         phone: phone || null,
         dob,
+        salaryType,
+        dailyWage,
         baseSalary,
         responsibilityAmount,
         phoneAllowance,
@@ -136,6 +142,10 @@ export async function updateEmployee(prevState: any, formData: FormData) {
   const otherAllowance = parseFloat(formData.get("otherAllowance") as string) || 0;
   const hasInsurance = formData.get("hasInsurance") === "true";
 
+  // Loại lương: theo tháng (mặc định) hoặc theo ngày
+  const salaryType = formData.get("salaryType") === "DAILY" ? "DAILY" : "MONTHLY";
+  const dailyWage = parseFloat(formData.get("dailyWage") as string) || 0;
+
   if (!id || !fullName) return { error: "Thiếu thông tin bắt buộc!" };
 
   try {
@@ -143,6 +153,8 @@ export async function updateEmployee(prevState: any, formData: FormData) {
       where: { id },
       data: {
         fullName,
+        salaryType,
+        dailyWage,
         baseSalary,
         responsibilityAmount,
         phoneAllowance,

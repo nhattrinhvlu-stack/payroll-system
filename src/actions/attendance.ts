@@ -2,8 +2,30 @@
 
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+
+// Helper: lấy thông tin người dùng hiện tại từ session
+async function getActor(): Promise<{ name: string; role: string }> {
+  try {
+    const cookieStore = await cookies();
+    const session = cookieStore.get("session");
+    if (session) {
+      const user = JSON.parse(session.value);
+      return {
+        name: user.name || user.username || "Unknown",
+        role: user.role || "",
+      };
+    }
+  } catch { }
+  return { name: "System", role: "" };
+}
 
 export async function upsertAttendance(formData: FormData) {
+  const { name: actorName, role } = await getActor();
+  if (!["ACCOUNTANT", "DIRECTOR"].includes(role)) {
+    return { error: "Không có quyền chấm công!" };
+  }
+
   const employeeId = formData.get("employeeId") as string;
   const dateStr = formData.get("date") as string;
 
@@ -79,7 +101,7 @@ export async function upsertAttendance(formData: FormData) {
 
     await db.auditLog.create({
       data: {
-        actorName: "Kế toán",
+        actorName,
         action: "Cập nhật chấm công",
         target: `Nhân viên: ${empName} - Ngày: ${new Date(dateStr).toLocaleDateString('vi-VN')}`,
         detail: `Công: ${finalWorkingDays} | TC: ${finalOvertime}h | Km: ${kmTraveled} | Hỗ trợ: ${dailyAllowance} | Ứng: ${dailyAdvance}${note ? ` | Ghi chú: ${note}` : ""}`
@@ -88,6 +110,7 @@ export async function upsertAttendance(formData: FormData) {
 
     revalidatePath("/accountant");
     revalidatePath("/director"); // Ensure director sees the new audit log
+    revalidatePath("/director/attendance");
 
     return { success: "Đã lưu!" };
   } catch (error) {
